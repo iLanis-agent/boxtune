@@ -1,0 +1,1 @@
+{"name":"boxtune","version":"1.0.0","description":"Sealed and ported loudspeaker enclosure designer from Thiele-Small parameters","scripts":{"test":"python3 tests/oracle.py && node tests/run_tests.js"},"license":"MIT"}
