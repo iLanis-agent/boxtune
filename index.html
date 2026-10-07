@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BoxTune - speaker box designer from Fs, Qts, Vas</title>
+<meta name="description" content="Turn a woofer's Thiele-Small numbers into a real enclosure: sealed size and cutoff, ported volume, tuning, response curve and port length.">
+<style>
+:root{--bg:#12101a;--card:#1b1826;--line:#2c2740;--txt:#e8e4f4;--dim:#a49ec0;--acc:#8fd6b4;--warn:#e5c07b;--bad:#e06c75}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.55 -apple-system,'Segoe UI',Roboto,sans-serif;padding:28px 18px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:2.2em;margin:0 0 12px}h1 span{color:var(--acc)}
+p.lede{color:var(--dim);font-size:1.1em;margin:0 0 24px}
+a.cta{display:inline-block;background:var(--acc);color:#12101a;font-weight:700;padding:13px 26px;border-radius:10px;text-decoration:none;font-size:1.05em}
+ul{color:var(--dim);padding-left:20px;margin:26px 0}li{margin:9px 0}
+.note{color:#6f6a8c;font-size:.85em;margin-top:30px}
+</style>
+</head>
+<body>
+<main>
+<h1>Box<span>Tune</span></h1>
+<p class="lede">You bought a subwoofer driver and the spec sheet hands you three cryptic numbers: Fs, Qts, Vas. Pick the wrong box volume and your build booms at one note or rolls off where the bass should start. BoxTune turns those three numbers into a real enclosure.</p>
+<a class="cta" href="app.html">Design my box</a>
+<ul>
+<li><b>Sealed designer</b> - pick a target Q (0.71 for the flattest Butterworth response) and get the exact box volume, system resonance and -3 dB cutoff; or enter a box you already have.</li>
+<li><b>Ported designer</b> - Keele's published optimum volume and tuning, then the real Small 4th-order response of any volume and tuning you try: f3, f6, f10 and how big the boom peak is.</li>
+<li><b>Response curve</b> - see the bass roll-off and any hump before you cut a single panel.</li>
+<li><b>Port calculator</b> - diameter and count to physical length from the Helmholtz relation, with end correction.</li>
+<li>Runs entirely in your browser. Four preset drivers included.</li>
+</ul>
+<p class="note">Small-signal Thiele/Small theory: sealed response is an exact 2nd-order high-pass; vented uses Small's 4th-order transfer function with leakage Q<sub>L</sub> = 7 (a common published assumption). Keele volume/tuning suggestions are published approximations to Thiele's optimum alignments, and are labeled as such in the app. Real builds also depend on driver displacement, power and room - treat results as the proven starting point the formulas intend.</p>
+</main>
+</body>
+</html>
