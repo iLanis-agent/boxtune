@@ -149,7 +149,7 @@ function run(){
   po+=`<div class="verdicts">`+
    vc('CUTOFF f3',fmt(r.f3)+' Hz','',(r.f3< (engine.sealedFromVb(fs,qts,vas,pVb).f3||1e9)?'lower than the same box sealed':'about the sealed cutoff'))+
    vc('f6 / f10',fmt(r.f6)+' / '+fmt(r.f10)+' Hz','','where the roll-off really ends')+
-   vc('RESPONSE PEAK','+'+fmt(r.peakDb,1)+' dB',peakTag,r.peakDb>0.3?('hump near '+fmt(r.peakF,0)+' Hz'):'no audible hump')+
+   vc('RESPONSE PEAK',(r.peakDb>=0?'+':'')+fmt(r.peakDb,1)+' dB',peakTag,r.peakDb>0.3?('hump near '+fmt(r.peakF,0)+' Hz'):'no audible hump')+
    vc('KEELE f3 ESTIMATE',fmt(k.F3)+' Hz','','published approximation for the optimum box')+
   `</div>`;
   drawCurve(r.curve,r.f3,pFb);
