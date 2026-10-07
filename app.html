@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BoxTune - speaker box designer</title>
+<style>
+:root{--bg:#12101a;--card:#1b1826;--line:#2c2740;--txt:#e8e4f4;--dim:#a49ec0;--acc:#8fd6b4;--warn:#e5c07b;--bad:#e06c75;--ok:#7bc87b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif;padding:22px 14px}
+main{max-width:860px;margin:0 auto}
+h1{font-size:1.5em;margin:0 0 4px}h1 span{color:var(--acc)}
+.sub{color:var(--dim);margin:0 0 18px;font-size:.92em}
+a.back{color:var(--dim);font-size:.85em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;color:var(--dim);font-size:.78em;margin-bottom:3px}
+input,select{width:100%;background:#12101a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 10px;font-size:1em}
+input:focus{outline:1px solid var(--acc)}
+button{background:var(--acc);color:#12101a;border:0;border-radius:9px;padding:11px 18px;font-weight:700;font-size:1em;cursor:pointer}
+button.ghost{background:#262136;color:var(--txt);border:1px solid var(--line);font-weight:400;padding:8px 12px;font-size:.85em}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95em}
+td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{color:var(--dim);white-space:nowrap}
+td.v{font-weight:600;white-space:nowrap}
+.verdicts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+.vc{background:#221d33;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.vc .k{color:var(--dim);font-size:.72em;letter-spacing:.05em}
+.vc .n{font-size:1.35em;font-weight:700;margin:2px 0}
+.vc .tag{font-size:.72em;font-weight:700;display:inline-block;padding:1px 7px;border-radius:8px;margin-bottom:3px}
+.tag.ok{background:#1e3a2a;color:var(--ok)}.tag.warn{background:#3a331e;color:var(--warn)}.tag.bad{background:#3a1e24;color:var(--bad)}
+.vc .h{color:var(--dim);font-size:.74em}
+.err{background:#3a1e24;border:1px solid var(--bad);color:#f0b9c0;border-radius:10px;padding:12px 16px;margin:12px 0;display:none}
+.note{color:#6f6a8c;font-size:.8em;margin-top:14px}
+h2{font-size:1.08em;margin:0 0 10px}
+svg{width:100%;height:auto;display:block}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="index.html">&larr; BoxTune</a>
+<h1>Box<span>Tune</span> designer</h1>
+<p class="sub">Enter your driver's Thiele-Small numbers. Everything updates from those three values.</p>
+
+<div class="card">
+<h2>1. Driver</h2>
+<div class="grid">
+<div><label>Fs - free-air resonance (Hz)</label><input id="fs" type="number" step="any" value="28.9"></div>
+<div><label>Qts - total Q</label><input id="qts" type="number" step="any" value="0.38"></div>
+<div><label>Vas - equivalent volume (L)</label><input id="vas" type="number" step="any" value="57.5"></div>
+</div>
+<div class="presets" id="presets"></div>
+</div>
+<div class="err" id="err"></div>
+
+<div class="card">
+<h2>2. Sealed box</h2>
+<div class="grid">
+<div><label>Target Qtc (0.71 = flattest)</label><input id="qtc" type="number" step="any" value="0.71"></div>
+<div><label>or a box you already have (L)</label><input id="haveVb" type="number" step="any" placeholder="optional"></div>
+</div>
+<div id="sealedOut"></div>
+</div>
+
+<div class="card">
+<h2>3. Ported box</h2>
+<div class="grid">
+<div><label>Box volume Vb (L)</label><input id="pVb" type="number" step="any"></div>
+<div><label>Tuning Fb (Hz)</label><input id="pFb" type="number" step="any"></div>
+</div>
+<div class="presets"><button class="ghost" id="keeleBtn">Fill Keele optimum suggestion</button></div>
+<div id="portedOut"></div>
+<div id="curveWrap" class="hidden">
+<svg id="curve" viewBox="0 0 640 260" role="img" aria-label="frequency response"></svg>
+<p class="note">Simulated small-signal response (Small 4th-order, Q<sub>L</sub>=7). Dashed: -3 dB. Vertical marker: tuning Fb. Dot: f3.</p>
+</div>
+</div>
+
+<div class="card">
+<h2>4. Port length</h2>
+<div class="grid">
+<div><label>Port diameter (mm)</label><input id="pdia" type="number" step="any" value="100"></div>
+<div><label>Number of identical ports</label><input id="pcount" type="number" step="1" min="1" value="1"></div>
+</div>
+<div id="portOut"></div>
+<p class="note">Helmholtz relation, end correction 0.732&times;D (one flanged end). If the length looks impractical, try a smaller diameter or a flared/slot port.</p>
+</div>
+
+<p class="note">Model: standard small-signal Thiele/Small theory. Sealed response is the exact 2nd-order high-pass; vented uses Small's 4th-order transfer function with box leakage Q<sub>L</sub>=7 (published common assumption). "Keele optimum" uses D.B. Keele's published approximations (Vb=15&middot;Vas&middot;Qts<sup>2.87</sup>, Fb=0.42&middot;Fs&middot;Qts<sup>-0.9</sup>, F3=0.26&middot;Fs&middot;Qts<sup>-1.4</sup>) to Thiele's alignments - approximations, labeled as such. Excursion, power handling and room gain are outside this model.</p>
+</main>
+<script src="engine.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const presets=[
+ {n:'Budget 10" sub',fs:28.9,qts:0.38,vas:57.5},
+ {n:'Compact 6.5" woofer',fs:45,qts:0.32,vas:14},
+ {n:'PA 12"',fs:40,qts:0.24,vas:95},
+ {n:'Textbook Butterworth driver',fs:30,qts:0.38268,vas:42.47}];
+presets.forEach(p=>{const b=document.createElement('button');b.className='ghost';b.textContent=p.n;
+ b.onclick=()=>{$('fs').value=p.fs;$('qts').value=p.qts;$('vas').value=p.vas;run();};$('presets').appendChild(b);});
+const fmt=(v,d=1)=>v.toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+function tag(txt,cls){return `<span class="tag ${cls}">${txt}</span>`}
+function vc(k,n,tg,h){return `<div class="vc"><div class="k">${k}</div>${tg||''}<div class="n">${n}</div><div class="h">${h||''}</div></div>`}
+function sealedVerdict(q){
+ if(q<0.58)return tag('LEAN','warn');
+ if(q<=0.75)return tag('FLAT ZONE','ok');
+ if(q<=0.95)return tag('WARM','ok');
+ if(q<=1.2)return tag('PEAKY','warn');
+ return tag('BOOMY','bad');}
+function sealedHint(q){
+ if(q<0.58)return 'critically damped territory - tight, but may sound thin';
+ if(q<=0.75)return 'Butterworth 0.71 gives the flattest possible sealed response';
+ if(q<=0.95)return 'slight warmth bump trades a little flatness for a smaller box';
+ if(q<=1.2)return 'audible peak - expect one-note bass emphasis';
+ return 'heavy peak and ringing - strongly consider a bigger box';}
+function showErr(m){const e=$('err');e.textContent=m;e.style.display='block';}
+function hideErr(){$('err').style.display='none';}
+function num(id){const v=parseFloat($(id).value);return isFinite(v)?v:NaN;}
+function run(){
+ hideErr();
+ const fs=num('fs'),qts=num('qts'),vas=num('vas');
+ if(!(fs>0)||!(qts>0)||!(vas>0)){showErr('Fs, Qts and Vas must all be positive numbers.');return;}
+ // sealed
+ let s,out='';
+ if($('haveVb').value){s=engine.sealedFromVb(fs,qts,vas,num('haveVb'));}
+ else{s=engine.sealedFromQtc(fs,qts,vas,num('qtc'));}
+ if(s.error)showErr(s.error);
+ else{
+  out+=`<div class="verdicts">`+
+   vc('BOX VOLUME',fmt(s.Vb)+' L','',(s.Vb*0.0353147).toFixed(2)+' ft&sup3; net (add driver + bracing)')+
+   vc('SYSTEM RESONANCE',fmt(s.fc)+' Hz','','the box raises Fs')+
+   vc('CUTOFF f3',fmt(s.f3)+' Hz',sealedVerdict(s.Qtc),'response is -3 dB here')+
+   vc('Qtc',fmt(s.Qtc,3),'',sealedHint(s.Qtc))+
+  `</div>`;
+ }
+ $('sealedOut').innerHTML=out;
+ // ported
+ const k=engine.keeleOptimum(fs,qts,vas);
+ if(!$('pVb').value){$('pVb').placeholder='try '+fmt(k.Vb);}
+ if(!$('pFb').value){$('pFb').placeholder='try '+fmt(k.Fb);}
+ const pVb=$('pVb').value?num('pVb'):k.Vb, pFb=$('pFb').value?num('pFb'):k.Fb;
+ const r=engine.ventedAnalyze(fs,qts,vas,pVb,pFb);
+ let po='';
+ if(r.error)showErr(r.error);
+ else{
+  const peakTag=r.peakDb<0.5?tag('FLAT KNEE','ok'):r.peakDb<2?tag('MILD HUMP','warn'):tag('BOOMY','bad');
+  po+=`<div class="verdicts">`+
+   vc('CUTOFF f3',fmt(r.f3)+' Hz','',(r.f3< (engine.sealedFromVb(fs,qts,vas,pVb).f3||1e9)?'lower than the same box sealed':'about the sealed cutoff'))+
+   vc('f6 / f10',fmt(r.f6)+' / '+fmt(r.f10)+' Hz','','where the roll-off really ends')+
+   vc('RESPONSE PEAK','+'+fmt(r.peakDb,1)+' dB',peakTag,r.peakDb>0.3?('hump near '+fmt(r.peakF,0)+' Hz'):'no audible hump')+
+   vc('KEELE f3 ESTIMATE',fmt(k.F3)+' Hz','','published approximation for the optimum box')+
+  `</div>`;
+  drawCurve(r.curve,r.f3,pFb);
+ }
+ $('portedOut').innerHTML=po;
+ $('curveWrap').classList.toggle('hidden',!!r.error);
+ // port
+ const pr=engine.portLength(pVb,pFb,num('pdia'),Math.max(1,Math.round(num('pcount'))||1));
+ $('portOut').innerHTML=pr.error?`<p class="note" style="color:var(--bad)">${pr.error}</p>`
+  :`<table><tr><td>Physical port length</td><td class="v">${fmt(pr.lengthMm,0)} mm</td><td>${fmt(pr.lengthMm/25.4,1)} in, each port</td></tr>`+
+   `<tr><td>Total port area</td><td class="v">${fmt(pr.areaCm2,0)} cm&sup2;</td><td>bigger area = quieter air speed</td></tr>`+
+   (pr.lengthMm>450?`<tr><td>Practicality</td><td class="v" style="color:var(--warn)">LONG</td><td>over 45 cm - consider a bend, a slot port or a passive radiator</td></tr>`:'')+
+  `</table>`;
+}
+function drawCurve(curve,f3,fb){
+ const W=640,H=260,pl=38,pr=10,pt=10,pb=26;
+ const fmin=12,fmax=400,dmin=-24,dmax=6;
+ const X=f=>pl+(W-pl-pr)*Math.log(f/fmin)/Math.log(fmax/fmin);
+ const Y=d=>pt+(H-pt-pb)*(1-(d-dmin)/(dmax-dmin));
+ let s='';
+ [-20,-15,-10,-6,-3,0,3].forEach(d=>{s+=`<line x1="${pl}" y1="${Y(d)}" x2="${W-pr}" y2="${Y(d)}" stroke="#2c2740" stroke-width="1"${d===-3?' stroke-dasharray="5 4" stroke="#57508a"':''}/><text x="6" y="${Y(d)+4}" fill="#6f6a8c" font-size="10">${d}</text>`;});
+ [20,30,40,60,80,100,150,200,300].forEach(f=>{s+=`<text x="${X(f)-8}" y="${H-8}" fill="#6f6a8c" font-size="10">${f}</text>`;});
+ s+=`<line x1="${X(fb)}" y1="${pt}" x2="${X(fb)}" y2="${H-pb}" stroke="#8fd6b4" stroke-width="1" stroke-dasharray="3 3"/>`;
+ s+='<path d="M '+curve.map(p=>X(p.f).toFixed(1)+' '+Y(Math.max(dmin,Math.min(dmax,p.dB))).toFixed(1)).join(' L ')+'" fill="none" stroke="#8fd6b4" stroke-width="2.5"/>';
+ s+=`<circle cx="${X(f3)}" cy="${Y(-3)}" r="4.5" fill="#e5c07b"/>`;
+ $('curve').innerHTML=s;
+}
+$('keeleBtn').onclick=()=>{const k=engine.keeleOptimum(num('fs'),num('qts'),num('vas'));
+ if(k.error){showErr(k.error);return;}
+ $('pVb').value=fmt(k.Vb);$('pFb').value=fmt(k.Fb);run();};
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',run));
+run();
+</script>
+</body>
+</html>
